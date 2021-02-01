@@ -4,16 +4,215 @@
  * @Author: qushuaibo
  * @Date: 2021-01-27 12:48:49
  * @LastEditors: qushuaibo
- * @LastEditTime: 2021-02-02 00:24:12
+ * @LastEditTime: 2021-02-02 00:30:34
 -->
-<html>
+<!DOCTYPE html>
+<html lang="en">
 
-<head>dfdfd</head>
-<title>fdf</title>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>天气查询</title>
+  <link rel="stylesheet" href="./css/bootstrap.min.css" />
+  <link rel="stylesheet" href="./css/buttons.css" />
+  <link rel="stylesheet" href="./css/index.css">
+  <style>
+    #search {
+      margin-top: 10px;
+    }
+  </style>
+  <script src="./js/jquery.1.10.2.min.js"></script>
+  <!--  jsnop跨域  -->
+  <script>
+    function download(data) {
+      var oT1 = document.getElementById("t1");
+
+      var oInfo = document.getElementById("info");
+      oInfo.innerHTML = `城市：${data.city},pm2.5:${data.pm25}`;
+      // 1、先把天气情况取出
+      var arr = data.weather;
+      str = ``;
+      for (var i = 0; i < arr.length; i++) {
+        str += `
+            <tr>
+                <td>${arr[i].date}</td>
+                <td>${arr[i].weather}</td>
+                <td>${arr[i].wind}</td>
+                <td>${arr[i].temp}</td>
+            </tr>
+            `;
+        oT1.innerHTML = str;
+      }
+    }
+  </script>
+  <script>
+    /* 
+        $().load()
+        $().get()
+        $().post()
+     */
+    myajax = $.ajax({
+      type: "get",
+      url: "https://api.asilu.com/geo",
+      // 完成jsonp
+      dataType: "jsonp",
+      success: function (data, statuText) {
+        $("#Ajax_ad").val(data.address);
+        $("#Ajax_ip").val(data.ip);
+      },
+      error: function (msg) {
+        alert(msg);
+      }
+    });
+    //  记录来访者
+    $(function () {
+      $.when(myajax).done(function () {
+        var addr = $("#Ajax_ad").val();
+        var ip = $("#Ajax_ip").val();
+        var myDate = new Date;
+        var year = myDate.getFullYear();
+        var mon = myDate.getMonth() + 1;
+        var date = myDate.getDate();
+        var h = myDate.getHours();
+        var m = myDate.getMinutes();
+        var s = myDate.getSeconds();
+        var need_date = year + "年" + mon + "月" + date + "日" + h + "时" + m + "分" + s + "秒";
+        // alert(need_date);
+        $.post("./visitor_mysql/ip_find.php", {
+          n_date: need_date,
+          n_address: addr,
+          n_ip: ip
+        },
+          function (data, statusText, xhr) {
+            // alert(data);
+          })
+      })
+      /// =================
+      // 透明
+      var oImg = document.getElementById('img1');
+      var oAudio = document.getElementById("audio1")
+
+      oImg.onmouseover = function () {
+        // 30 => 100
+        startMove(100);
+      }
+      oImg.onmouseout = function () {
+        // 100 => 30
+        startMove(30);
+
+      }
+      // 播放音乐
+      oImg.onmousedown = function () {
+        if (oAudio.paused) {
+          oAudio.play();
+        } else {
+          oAudio.pause();
+        }
+        oAudio.volume = 0.3;
+      }
+      // 地图查询
+      var oBtn = document.getElementById("search");
+      var oCity = document.getElementById("city");
+      oBtn.onclick = function () {
+        if (!oCity.value) {
+          alert("请输入城市名");
+        }
+        var oScript = document.createElement("script");
+        oScript.src = `https://api.asilu.com/weather/?city=${oCity.value}&callback=download`;
+        document.body.appendChild(oScript);
+      };
+      // 设置一个中间变量 透明度当前值
+      var alpha = 2;
+      var timer = null;
+      function startMove(iTarget) {
+        var oImg = document.getElementById("img1");
+        clearInterval(timer);
+        var speed = 2;
+        speed = iTarget > alpha ? Math.abs(speed) : -Math.abs(speed)
+        timer = setInterval(function () {
+          if (iTarget == alpha) {
+            clearInterval(timer)
+          } else {
+            alpha += speed;
+          }
+          // document.title = alpha;
+          // 透明度兼容
+          oImg.style.opacity = alpha / 100;
+          oImg.style.filter = `alpha(opacity=${alpha})`;
+        }, 30)
+      }
+    })
+
+  </script>
+</head>
 
 <body>
-  <h1>琚帅ii波</h1>
-  <img src="./pic/test.png">展望</img>
+  <!-- 图片 -->
+  <img src="./pic/my.png" alt="" id='img1'>
+  <!-- 目录 -->
+  <div id="div2">
+    <ul class="nav">
+      <a href="#">地图</a>
+      <ul class="plat">
+        <li><a href="./sogou_api/location.html">经纬度查询</a></li>
+        <li><a href="./sogou_api/school.html">上学历程</a></li>
+      </ul>
+    </ul>
+    <ul class="nav">
+      <a href="">show</a>
+      <ul class="plat">
+        <li><a href="./html/video_show.html">王者时刻</a></li>
+        <li><a href="./visitor_mysql/show_ip.html">来访者</a></li>
+      </ul>
+    </ul>
+    <ul class="nav">
+      <a href="">other</a>
+      <ul class="plat">
+        <li><a href="../data_show/views/index.html">凝结水数据展示</a></li>
+        <li><a href="../blog/index.php">个人博客</a></li>
+      </ul>
+    </ul>
+  </div>
+  <!-- 音乐 -->
+  <div id='div1'>
+    <audio id="audio1" display="none">
+      <source src="./music/zhu.mp3">
+    </audio>
+  </div>
+  <!-- 天气 -->
+  <div id='div3' class="container">
+    <div class="panel panel-primary">
+      <div class="panel-heading">
+        <h2>天气查询
+          <span id="info"></span>
+        </h2>
+      </div>
+      <div class="panel-body">
+        <div class="form-group">
+          <label for="city">城市名</label>
+          <input id="city" type="text" class="form-control" />
+          <button id="search" class="button button-3d button-action button-pill form-control">
+            查询 查询该城市天气
+          </button>
+        </div>
+      </div>
+      <div class="panel-footer">
+        <table class="table table-bordered table-hover">
+          <thead>
+            <tr>
+              <th>日期</th>
+              <th>天气</th>
+              <th>风向</th>
+              <th>气温</th>
+            </tr>
+          </thead>
+          <tbody id="t1"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <input type="text" id="Ajax_ad" hidden>
+  <input type="text" id="Ajax_ip" hidden>
 </body>
 
 </html>
